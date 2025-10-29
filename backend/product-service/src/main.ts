@@ -1,0 +1,37 @@
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { ValidationPipe } from '@nestjs/common';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { join } from 'path';
+
+async function bootstrap() {
+  // Create HTTP application
+  const app = await NestFactory.create(AppModule);
+  
+  // Enable CORS for frontend communication
+  app.enableCors({
+    origin: 'http://localhost:3000',
+    credentials: true,
+  });
+  
+  // Enable validation
+  app.useGlobalPipes(new ValidationPipe());
+  
+  // Connect gRPC microservice
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.GRPC,
+    options: {
+      package: 'product',
+      protoPath: join(__dirname, '../proto/product.proto'),
+      url: 'localhost:5001',
+    },
+  });
+  
+  await app.startAllMicroservices();
+  await app.listen(3001);
+  
+  console.log('Product Service is running on http://localhost:3001');
+  console.log('Product gRPC Service is running on localhost:5001');
+}
+
+bootstrap();

@@ -1,0 +1,21 @@
+# Generated proto files
+*.pb.js
+*.pb.ts
+*.pb.go
+*.pb.py
+
+# Backup files
+*.proto.bak
+*.proto.backup
+
+# Temporary files
+*.tmp
+*.temp
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db

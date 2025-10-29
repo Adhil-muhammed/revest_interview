@@ -1,0 +1,76 @@
+# Backend-wide gitignore for microservices architecture
+
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment variables
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# Build outputs
+dist/
+build/
+
+# Logs
+logs
+*.log
+
+# Coverage reports
+coverage/
+*.lcov
+
+# TypeScript
+*.tsbuildinfo
+
+# IDEs and editors
+.idea/
+.vscode/
+*.code-workspace
+*.swp
+*.swo
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+Dockerfile.local
+
+# Microservices shared
+shared/dist/
+shared/build/
+
+# Proto files backup
+proto/*.bak
+*.proto.bak
+
+# Database
+*.sqlite
+*.db
+
+# Certificates and keys
+*.pem
+*.key
+*.crt
+
+# Temporary files
+tmp/
+temp/
+
+# PM2
+ecosystem.config.js
+
+# Kubernetes
+*.yaml.local
+helm-values.local.yaml
+
+# Service mesh
+istio-*.yaml
