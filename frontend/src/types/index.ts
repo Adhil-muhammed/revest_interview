@@ -45,18 +45,18 @@ export interface Order {
 
 export interface CreateProductDto {
   name: string;
-  price: number;
+  price: number | string; // Allow string input from forms
   description?: string;
   category?: string;
   inStock?: boolean;
   imageUrl?: string;
   sku?: string;
-  stockQuantity?: number;
+  stockQuantity?: number | string; // Allow string input from forms
 }
 
 export interface CreateOrderDto {
   productId: string;
-  quantity: number;
+  quantity: number | string; // Allow string input from forms
   customerName: string;
   customerEmail?: string;
   customerPhone?: string;

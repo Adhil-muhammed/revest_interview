@@ -11,8 +11,18 @@ async function bootstrap() {
     credentials: true,
   });
   
-  // Enable validation
-  app.useGlobalPipes(new ValidationPipe());
+  // Enable validation with automatic type transformation
+  app.useGlobalPipes(new ValidationPipe({
+    transform: true,
+    transformOptions: {
+      enableImplicitConversion: true,
+    },
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    skipMissingProperties: false,
+    skipNullProperties: false,
+    skipUndefinedProperties: false,
+  }));
   
   await app.listen(3002);
   console.log('Order Service is running on http://localhost:3002');

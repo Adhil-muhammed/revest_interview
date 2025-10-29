@@ -26,6 +26,7 @@ import {
 import { Add, Edit, Delete, Refresh } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 import { Product, CreateProductDto } from '../types';
+import { validateProductData,  } from '../utils/validation';
 
 interface ProductManagerProps {
   onNotification: (message: string, severity?: 'success' | 'error' | 'warning' | 'info') => void;
@@ -63,12 +64,20 @@ const ProductManager: React.FC<ProductManagerProps> = ({ onNotification }) => {
 
   const handleCreateProduct = async (data: CreateProductDto) => {
     try {
+      // Validate and convert data
+      const validation = validateProductData(data);
+      
+      if (!validation.isValid) {
+        onNotification(validation.errors.join(', '), 'error');
+        return;
+      }
+
       const response = await fetch('http://localhost:3001/products', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(validation.data),
       });
 
       if (response.ok) {
@@ -76,10 +85,12 @@ const ProductManager: React.FC<ProductManagerProps> = ({ onNotification }) => {
         onNotification('Product created successfully');
         handleCloseDialog();
       } else {
-        throw new Error('Failed to create product');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create product');
       }
     } catch (error) {
-      onNotification('Failed to create product', 'error');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create product';
+      onNotification(errorMessage, 'error');
     }
   };
 
@@ -87,12 +98,20 @@ const ProductManager: React.FC<ProductManagerProps> = ({ onNotification }) => {
     if (!editingProduct) return;
 
     try {
+      // Validate and convert data
+      const validation = validateProductData(data);
+      
+      if (!validation.isValid) {
+        onNotification(validation.errors.join(', '), 'error');
+        return;
+      }
+
       const response = await fetch(`http://localhost:3001/products/${editingProduct._id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(validation.data),
       });
 
       if (response.ok) {
@@ -100,10 +119,12 @@ const ProductManager: React.FC<ProductManagerProps> = ({ onNotification }) => {
         onNotification('Product updated successfully');
         handleCloseDialog();
       } else {
-        throw new Error('Failed to update product');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update product');
       }
     } catch (error) {
-      onNotification('Failed to update product', 'error');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update product';
+      onNotification(errorMessage, 'error');
     }
   };
 
@@ -216,7 +237,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({ onNotification }) => {
                     </Typography>
                   )}
                 </TableCell>
-                <TableCell>${product.price.toFixed(2)}</TableCell>
+                <TableCell>{product.price}</TableCell>
                 <TableCell>{product.category || 'N/A'}</TableCell>
                 <TableCell>{product.stockQuantity}</TableCell>
                 <TableCell>
@@ -278,7 +299,13 @@ const ProductManager: React.FC<ProductManagerProps> = ({ onNotification }) => {
                   control={control}
                   rules={{ 
                     required: 'Price is required',
-                    min: { value: 0, message: 'Price must be positive' }
+                    validate: (value) => {
+                      const num = typeof value === 'string' ? parseFloat(value) : value;
+                      if (isNaN(num)) return 'Please enter a valid number';
+                      if (num < 0) return 'Price must be positive';
+                      if (num > 999999) return 'Price is too high';
+                      return true;
+                    }
                   }}
                   render={({ field }) => (
                     <TextField
@@ -287,7 +314,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({ onNotification }) => {
                       type="number"
                       fullWidth
                       required
-                      inputProps={{ step: 0.01 }}
+                      inputProps={{ step: 0.01, min: 0, max: 999999 }}
                       error={!!errors.price}
                       helperText={errors.price?.message}
                     />
@@ -312,7 +339,14 @@ const ProductManager: React.FC<ProductManagerProps> = ({ onNotification }) => {
                   name="stockQuantity"
                   control={control}
                   rules={{ 
-                    min: { value: 0, message: 'Stock quantity must be positive' }
+                    validate: (value) => {
+                      if (value === undefined || value === null) return true; // Optional field
+                      const num = typeof value === 'string' ? parseInt(value) : value;
+                      if (isNaN(num)) return 'Please enter a valid number';
+                      if (num < 0) return 'Stock quantity must be positive';
+                      if (num > 999999) return 'Stock quantity is too high';
+                      return true;
+                    }
                   }}
                   render={({ field }) => (
                     <TextField
@@ -320,6 +354,7 @@ const ProductManager: React.FC<ProductManagerProps> = ({ onNotification }) => {
                       label="Stock Quantity"
                       type="number"
                       fullWidth
+                      inputProps={{ min: 0, max: 999999, step: 1 }}
                       error={!!errors.stockQuantity}
                       helperText={errors.stockQuantity?.message}
                     />

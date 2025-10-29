@@ -1,4 +1,4 @@
-# Revest Solutions - Dynamic Component Builder Application
+# Dynamic Component Builder Application
 
 This project demonstrates a responsive application using Next.js and TypeScript that allows users to create and add their custom components with dynamic form fields based on JSON configuration, along with a complete microservices architecture backend.
 
@@ -77,15 +77,15 @@ docker-compose up -d mongodb
 ```
 
 ### 4. Start All Services
-
+<!-- 
 **Option A: Start all services simultaneously**
 ```bash
 # Make the setup script executable and run it
 chmod +x setup.sh
 ./setup.sh
-```
+``` -->
 
-**Option B: Start services individually**
+**Start services individually**
 ```bash
 # Terminal 1 - Product Service
 cd backend/product-service
@@ -431,64 +431,3 @@ rm -rf frontend/package-lock.json backend/*/package-lock.json
 - Ensure Product Service is running before Order Service
 - Check logs for connection errors
 - Restart services in correct order
-
-## 📋 Assignment Requirements Checklist
-
-### ✅ Creating Components - Signup Form
-- [x] Full Name field (TEXT with validation)
-- [x] Email field (EMAIL with format validation)  
-- [x] Gender field (LIST/RADIO - dynamic switching)
-- [x] Additional dynamic fields from JSON
-
-### ✅ Form Validation (React Hook Forms)
-- [x] Required field validation
-- [x] Email format validation
-- [x] Min/Max length validation
-- [x] Real-time error feedback
-- [x] Custom validation messages
-
-### ✅ Dynamic JSON-Based Fields
-- [x] Fields rendered from JSON configuration
-- [x] Dynamic field type switching (TEXT ↔ LIST ↔ RADIO)
-- [x] Live JSON editing with instant form updates
-- [x] Label and property changes reflect immediately
-- [x] Required/optional field toggling
-
-### ✅ Styling and Responsiveness
-- [x] Material-UI component library
-- [x] Responsive design for all screen sizes
-- [x] Visually appealing user interface
-- [x] Professional styling and layout
-
-### ✅ Data Persistence
-- [x] Local storage for form submissions
-- [x] Form submission history with timestamps
-- [x] Data persistence across browser sessions
-- [x] JSON configuration persistence
-
-## 🔗 Repository Information
-
-**Repository URL**: https://github.com/Adhil-muhammed/revest_interview
-
-**Clone Command**:
-```bash
-git clone https://github.com/Adhil-muhammed/revest_interview.git
-```
-
-**Branch**: `main`
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
-
-## 📄 License
-
-This project is developed for the Revest Solutions technical assessment and demonstrates full-stack development capabilities with modern web technologies.
-
----
-
-**Built with ❤️ for Revest Solutions Technical Assessment**

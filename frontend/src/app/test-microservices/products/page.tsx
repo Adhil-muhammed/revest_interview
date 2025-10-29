@@ -65,7 +65,7 @@ export default function ProductsPage() {
       </Paper>
 
       {/* API Information */}
-      <Paper sx={{ mt: 4, p: 3 }}>
+      {/* <Paper sx={{ mt: 4, p: 3 }}>
         <Typography variant="h5" gutterBottom>
           Product Service API Information
         </Typography>
@@ -86,7 +86,7 @@ export default function ProductsPage() {
           <li><strong>DELETE /products/:id</strong> - Delete a product</li>
           <li><strong>PATCH /products/:id/stock</strong> - Update product stock quantity</li>
         </Box>
-      </Paper>
+      </Paper> */}
 
       {/* Navigation */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>

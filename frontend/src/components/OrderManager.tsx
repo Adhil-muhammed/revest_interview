@@ -30,6 +30,7 @@ import {
 import { Add, Edit, Delete, Refresh, Visibility } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 import { Order, Product, CreateOrderDto } from '../types';
+import { validateOrderData, formatCurrency } from '../utils/validation';
 
 interface OrderManagerProps {
   onNotification: (message: string, severity?: 'success' | 'error' | 'warning' | 'info') => void;
@@ -86,12 +87,43 @@ const OrderManager: React.FC<OrderManagerProps> = ({ onNotification }) => {
 
   const handleCreateOrder = async (data: CreateOrderDto) => {
     try {
+      // Convert string inputs to proper types
+      const orderData = {
+        ...data,
+        quantity: typeof data.quantity === 'string' ? parseInt(data.quantity) : data.quantity,
+      };
+
+      // Validate converted data
+      if (isNaN(orderData.quantity) || orderData.quantity < 1) {
+        onNotification('Please enter a valid quantity (minimum 1)', 'error');
+        return;
+      }
+
+      if (!orderData.productId || orderData.productId.trim() === '') {
+        onNotification('Please select a product', 'error');
+        return;
+      }
+
+      if (!orderData.customerName || orderData.customerName.trim() === '') {
+        onNotification('Please enter customer name', 'error');
+        return;
+      }
+
+      // Validate email if provided
+      if (orderData.customerEmail && orderData.customerEmail.trim()) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(orderData.customerEmail)) {
+          onNotification('Please enter a valid email address', 'error');
+          return;
+        }
+      }
+
       const response = await fetch('http://localhost:3002/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(orderData),
       });
 
       if (response.ok) {
@@ -112,12 +144,33 @@ const OrderManager: React.FC<OrderManagerProps> = ({ onNotification }) => {
     if (!editingOrder) return;
 
     try {
+      // Convert string inputs to proper types if quantity is being updated
+      const orderData = {
+        ...data,
+        quantity: data.quantity ? (typeof data.quantity === 'string' ? parseInt(data.quantity) : data.quantity) : undefined,
+      };
+
+      // Validate converted data if quantity is provided
+      if (orderData.quantity !== undefined && (isNaN(orderData.quantity) || orderData.quantity < 1)) {
+        onNotification('Please enter a valid quantity (minimum 1)', 'error');
+        return;
+      }
+
+      // Validate email if provided
+      if (orderData.customerEmail && orderData.customerEmail.trim()) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(orderData.customerEmail)) {
+          onNotification('Please enter a valid email address', 'error');
+          return;
+        }
+      }
+
       const response = await fetch(`http://localhost:3002/orders/${editingOrder._id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(orderData),
       });
 
       if (response.ok) {
@@ -125,10 +178,12 @@ const OrderManager: React.FC<OrderManagerProps> = ({ onNotification }) => {
         onNotification('Order updated successfully');
         handleCloseDialog();
       } else {
-        throw new Error('Failed to update order');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update order');
       }
     } catch (error) {
-      onNotification('Failed to update order', 'error');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update order';
+      onNotification(errorMessage, 'error');
     }
   };
 
@@ -365,7 +420,13 @@ const OrderManager: React.FC<OrderManagerProps> = ({ onNotification }) => {
                   control={control}
                   rules={{ 
                     required: 'Quantity is required',
-                    min: { value: 1, message: 'Quantity must be at least 1' }
+                    validate: (value) => {
+                      const num = typeof value === 'string' ? parseInt(value) : value;
+                      if (isNaN(num)) return 'Please enter a valid number';
+                      if (num < 1) return 'Quantity must be at least 1';
+                      if (num > 1000) return 'Quantity is too high (max 1000)';
+                      return true;
+                    }
                   }}
                   render={({ field }) => (
                     <TextField
@@ -374,6 +435,7 @@ const OrderManager: React.FC<OrderManagerProps> = ({ onNotification }) => {
                       type="number"
                       fullWidth
                       required
+                      inputProps={{ min: 1, max: 1000, step: 1 }}
                       error={!!errors.quantity}
                       helperText={errors.quantity?.message}
                     />
@@ -384,7 +446,15 @@ const OrderManager: React.FC<OrderManagerProps> = ({ onNotification }) => {
                 <Controller
                   name="customerName"
                   control={control}
-                  rules={{ required: 'Customer name is required' }}
+                  rules={{ 
+                    required: 'Customer name is required',
+                    minLength: { value: 2, message: 'Name must be at least 2 characters' },
+                    maxLength: { value: 100, message: 'Name must not exceed 100 characters' },
+                    pattern: {
+                      value: /^[a-zA-Z\s'-]+$/,
+                      message: 'Name can only contain letters, spaces, hyphens and apostrophes'
+                    }
+                  }}
                   render={({ field }) => (
                     <TextField
                       {...field}
@@ -401,12 +471,20 @@ const OrderManager: React.FC<OrderManagerProps> = ({ onNotification }) => {
                 <Controller
                   name="customerEmail"
                   control={control}
+                  rules={{
+                    pattern: {
+                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                      message: 'Please enter a valid email address'
+                    }
+                  }}
                   render={({ field }) => (
                     <TextField
                       {...field}
                       label="Customer Email"
                       type="email"
                       fullWidth
+                      error={!!errors.customerEmail}
+                      helperText={errors.customerEmail?.message}
                     />
                   )}
                 />
@@ -415,11 +493,20 @@ const OrderManager: React.FC<OrderManagerProps> = ({ onNotification }) => {
                 <Controller
                   name="customerPhone"
                   control={control}
+                  rules={{
+                    pattern: {
+                      value: /^[\+]?[1-9][\d]{0,15}$/,
+                      message: 'Please enter a valid phone number'
+                    }
+                  }}
                   render={({ field }) => (
                     <TextField
                       {...field}
                       label="Customer Phone"
                       fullWidth
+                      placeholder="e.g., +1234567890"
+                      error={!!errors.customerPhone}
+                      helperText={errors.customerPhone?.message}
                     />
                   )}
                 />

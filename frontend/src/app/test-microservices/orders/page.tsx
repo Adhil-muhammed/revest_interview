@@ -65,7 +65,7 @@ export default function OrdersPage() {
       </Paper>
 
       {/* API Information */}
-      <Paper sx={{ mt: 4, p: 3 }}>
+      {/* <Paper sx={{ mt: 4, p: 3 }}>
         <Typography variant="h5" gutterBottom>
           Order Service API Information
         </Typography>
@@ -98,7 +98,7 @@ export default function OrdersPage() {
           <li>Product details fetching for order display</li>
           <li>Price calculation based on current product prices</li>
         </Box>
-      </Paper>
+      </Paper> */}
 
       {/* Navigation */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
