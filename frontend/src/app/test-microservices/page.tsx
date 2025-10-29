@@ -71,50 +71,6 @@ export default function TestMicroservicesPage() {
             </CardActions>
           </Card>
         </Grid>
-
-        {/* Dynamic Form Card */}
-        <Grid item xs={12} md={6} lg={3}>
-          <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <CardContent sx={{ flexGrow: 1, textAlign: 'center' }}>
-              <DynamicForm sx={{ fontSize: 60, color: 'info.main', mb: 2 }} />
-              <Typography variant="h5" component="h2" gutterBottom>
-                Dynamic Forms
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                JSON-driven form builder with dynamic field types and validation.
-              </Typography>
-            </CardContent>
-            <CardActions sx={{ justifyContent: 'center', pb: 2 }}>
-              <Link href="/test-microservices/dynamic-form" passHref>
-                <Button variant="contained" size="large" color="info">
-                  Test Forms
-                </Button>
-              </Link>
-            </CardActions>
-          </Card>
-        </Grid>
-
-        {/* User Signup Card */}
-        <Grid item xs={12} md={6} lg={3}>
-          <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <CardContent sx={{ flexGrow: 1, textAlign: 'center' }}>
-              <Person sx={{ fontSize: 60, color: 'warning.main', mb: 2 }} />
-              <Typography variant="h5" component="h2" gutterBottom>
-                User Registration
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Dynamic signup form with JSON configuration and local storage.
-              </Typography>
-            </CardContent>
-            <CardActions sx={{ justifyContent: 'center', pb: 2 }}>
-              <Link href="/test-microservices/signup" passHref>
-                <Button variant="contained" size="large" color="warning">
-                  Test Signup
-                </Button>
-              </Link>
-            </CardActions>
-          </Card>
-        </Grid>
       </Grid>
 
       {/* API Endpoints Documentation */}

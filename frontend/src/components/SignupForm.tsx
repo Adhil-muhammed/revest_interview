@@ -16,7 +16,13 @@ import {
   TextareaAutosize,
   Alert,
   CircularProgress,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Grid,
+  Chip,
 } from '@mui/material';
+import { ExpandMore, Edit, Refresh } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -41,15 +47,20 @@ const SignupForm: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [savedData, setSavedData] = useState<FormData[]>([]);
+  const [currentConfig, setCurrentConfig] = useState(formConfig);
+  const [jsonEditorValue, setJsonEditorValue] = useState(JSON.stringify(formConfig, null, 2));
+  const [jsonError, setJsonError] = useState<string | null>(null);
+  const [showJsonEditor, setShowJsonEditor] = useState(false);
 
   // Build dynamic validation schema
   const buildValidationSchema = () => {
     const schemaFields: any = {};
     
-    (formConfig.data as FormField[]).forEach((field: FormField) => {
+    (currentConfig.data as FormField[]).forEach((field: FormField) => {
       let validator: any = yup.string();
       
-      if (field.fieldType === 'EMAIL' || (field.fieldType === 'TEXT' && field.name.toLowerCase().includes('email'))) {
+      if (field.fieldType === 'EMAIL' || 
+          (field.fieldType === 'TEXT' && field.name.toLowerCase().includes('email'))) {
         validator = validator.email('Please enter a valid email address');
       }
       
@@ -57,15 +68,23 @@ const SignupForm: React.FC = () => {
         validator = yup.number().typeError('Must be a number');
       }
       
-      if (field.required) {
-        validator = validator.required(`${field.name} is required`);
+      if (field.fieldType === 'CHECKBOX') {
+        validator = yup.boolean();
       }
       
-      if (field.minLength) {
+      if (field.required) {
+        if (field.fieldType === 'CHECKBOX') {
+          validator = validator.oneOf([true], `${field.name} must be checked`);
+        } else {
+          validator = validator.required(`${field.name} is required`);
+        }
+      }
+      
+      if (field.minLength && field.fieldType !== 'NUMBER' && field.fieldType !== 'CHECKBOX') {
         validator = validator.min(field.minLength, `${field.name} must be at least ${field.minLength} characters`);
       }
       
-      if (field.maxLength) {
+      if (field.maxLength && field.fieldType !== 'NUMBER' && field.fieldType !== 'CHECKBOX') {
         validator = validator.max(field.maxLength, `${field.name} must be no more than ${field.maxLength} characters`);
       }
       
@@ -82,8 +101,12 @@ const SignupForm: React.FC = () => {
     reset,
   } = useForm({
     resolver: yupResolver(buildValidationSchema()),
-    defaultValues: (formConfig.data as FormField[]).reduce((acc, field) => {
-      acc[field.id] = field.defaultValue || '';
+    defaultValues: (currentConfig.data as FormField[]).reduce((acc, field) => {
+      if (field.fieldType === 'CHECKBOX') {
+        acc[field.id] = field.defaultValue === 'true' || field.defaultValue === '1' || false;
+      } else {
+        acc[field.id] = field.defaultValue || '';
+      }
       return acc;
     }, {} as any),
   });
@@ -96,6 +119,47 @@ const SignupForm: React.FC = () => {
     }
   }, []);
 
+  // Update form when config changes
+  useEffect(() => {
+    reset((currentConfig.data as FormField[]).reduce((acc, field) => {
+      if (field.fieldType === 'CHECKBOX') {
+        acc[field.id] = field.defaultValue === 'true' || field.defaultValue === '1' || false;
+      } else {
+        acc[field.id] = field.defaultValue || '';
+      }
+      return acc;
+    }, {} as any));
+  }, [currentConfig, reset]);
+
+  const handleJsonUpdate = () => {
+    try {
+      const newConfig = JSON.parse(jsonEditorValue);
+      
+      // Validate the structure
+      if (!newConfig.data || !Array.isArray(newConfig.data)) {
+        throw new Error('Invalid JSON structure. Expected { "data": [...] }');
+      }
+      
+      // Validate each field
+      newConfig.data.forEach((field: any, index: number) => {
+        if (!field.id || !field.name || !field.fieldType) {
+          throw new Error(`Field ${index + 1} is missing required properties (id, name, fieldType)`);
+        }
+      });
+      
+      setCurrentConfig(newConfig);
+      setJsonError(null);
+    } catch (error) {
+      setJsonError(error instanceof Error ? error.message : 'Invalid JSON format');
+    }
+  };
+
+  const resetToDefault = () => {
+    setCurrentConfig(formConfig);
+    setJsonEditorValue(JSON.stringify(formConfig, null, 2));
+    setJsonError(null);
+  };
+
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     
@@ -104,7 +168,7 @@ const SignupForm: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Transform data with field names
-      const transformedData = (formConfig.data as FormField[]).reduce((acc, field) => {
+      const transformedData = (currentConfig.data as FormField[]).reduce((acc, field) => {
         acc[field.name] = data[field.id];
         return acc;
       }, {} as any);
@@ -146,7 +210,8 @@ const SignupForm: React.FC = () => {
                 {...controllerField}
                 fullWidth
                 label={field.name}
-                type={field.fieldType === 'EMAIL' || field.name.toLowerCase().includes('email') ? 'email' : 'text'}
+                type={field.fieldType === 'EMAIL' || 
+                     field.name.toLowerCase().includes('email') ? 'email' : 'text'}
                 error={!!errors[fieldName]}
                 helperText={errors[fieldName]?.message as string}
                 required={field.required}
@@ -255,15 +320,23 @@ const SignupForm: React.FC = () => {
             name={fieldName}
             control={control}
             render={({ field: controllerField }) => (
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    {...controllerField}
-                    checked={controllerField.value}
-                  />
-                }
-                label={field.name}
-              />
+              <Box sx={{ mt: 2 }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      {...controllerField}
+                      checked={!!controllerField.value}
+                      onChange={(e) => controllerField.onChange(e.target.checked)}
+                    />
+                  }
+                  label={field.name}
+                />
+                {errors[fieldName] && (
+                  <Typography variant="caption" color="error" display="block">
+                    {errors[fieldName]?.message as string}
+                  </Typography>
+                )}
+              </Box>
             )}
           />
         );
@@ -297,13 +370,128 @@ const SignupForm: React.FC = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 600, mx: 'auto', p: 3 }}>
+    <Box sx={{ maxWidth: 1200, mx: 'auto', p: 3 }}>
+      {/* JSON Configuration Editor */}
+      <Paper elevation={2} sx={{ mb: 4, p: 3 }}>
+        <Accordion expanded={showJsonEditor} onChange={() => setShowJsonEditor(!showJsonEditor)}>
+          <AccordionSummary expandIcon={<ExpandMore />}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Edit color="primary" />
+              <Typography variant="h6">
+                Dynamic JSON Configuration Editor
+              </Typography>
+              <Chip 
+                label="Live Editing" 
+                color="success" 
+                size="small" 
+                variant="outlined" 
+              />
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={6}>
+                <Typography variant="subtitle1" gutterBottom>
+                  Edit JSON Configuration:
+                </Typography>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={15}
+                  value={jsonEditorValue}
+                  onChange={(e) => setJsonEditorValue(e.target.value)}
+                  error={!!jsonError}
+                  helperText={jsonError}
+                  variant="outlined"
+                  sx={{ 
+                    fontFamily: 'monospace',
+                    '& .MuiInputBase-input': {
+                      fontFamily: 'monospace',
+                      fontSize: '0.875rem'
+                    }
+                  }}
+                />
+                <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
+                  <Button 
+                    variant="contained" 
+                    onClick={handleJsonUpdate}
+                    disabled={!!jsonError}
+                  >
+                    Apply Changes
+                  </Button>
+                  <Button 
+                    variant="outlined" 
+                    onClick={resetToDefault}
+                    startIcon={<Refresh />}
+                  >
+                    Reset to Default
+                  </Button>
+                </Box>
+              </Grid>
+              
+              <Grid item xs={12} md={6}>
+                <Typography variant="subtitle1" gutterBottom>
+                  Current Form Fields:
+                </Typography>
+                <Box sx={{ bgcolor: 'grey.50', p: 2, borderRadius: 1, maxHeight: 400, overflow: 'auto' }}>
+                  {(currentConfig.data as FormField[]).map((field, index) => (
+                    <Box key={field.id} sx={{ mb: 2, p: 2, bgcolor: 'white', borderRadius: 1, border: '1px solid #e0e0e0' }}>
+                      <Typography variant="subtitle2" color="primary">
+                        Field #{field.id}: {field.name}
+                      </Typography>
+                      <Grid container spacing={1} sx={{ mt: 1 }}>
+                        <Grid item xs={6}>
+                          <Chip label={`Type: ${field.fieldType}`} size="small" color="primary" variant="outlined" />
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Chip 
+                            label={field.required ? 'Required' : 'Optional'} 
+                            size="small" 
+                            color={field.required ? 'error' : 'default'} 
+                            variant="outlined" 
+                          />
+                        </Grid>
+                        {field.defaultValue && (
+                          <Grid item xs={12}>
+                            <Typography variant="caption" color="text.secondary">
+                              Default: {field.defaultValue}
+                            </Typography>
+                          </Grid>
+                        )}
+                        {field.listOfValues1 && (
+                          <Grid item xs={12}>
+                            <Typography variant="caption" color="text.secondary">
+                              Options: {field.listOfValues1.join(', ')}
+                            </Typography>
+                          </Grid>
+                        )}
+                      </Grid>
+                    </Box>
+                  ))}
+                </Box>
+                
+                <Alert severity="info" sx={{ mt: 2 }}>
+                  <Typography variant="body2">
+                    <strong>Try changing:</strong>
+                    <br />• fieldType: "TEXT" ↔ "LIST" ↔ "RADIO" ↔ "CHECKBOX"
+                    <br />• required: true ↔ false
+                    <br />• field names and default values
+                    <br />• listOfValues1 for LIST/RADIO fields
+                  </Typography>
+                </Alert>
+              </Grid>
+            </Grid>
+          </AccordionDetails>
+        </Accordion>
+      </Paper>
+
+      {/* Dynamic Form */}
       <Paper elevation={3} sx={{ p: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom align="center">
           Dynamic Signup Form
         </Typography>
-        <Typography variant="body1" align="center" color="text.secondary" gutterBottom>
-          Form with 3 main fields: Full Name, Email, Gender + Additional Dynamic Fields
+        <Typography variant="body2" align="center" color="primary" gutterBottom>
+          ✨ Form fields update automatically based on JSON configuration above
         </Typography>
         
         {submitSuccess && (
@@ -313,7 +501,7 @@ const SignupForm: React.FC = () => {
         )}
         
         <Box component="form" onSubmit={handleSubmit(onSubmit)}>
-          {(formConfig.data as FormField[]).map(renderField)}
+          {(currentConfig.data as FormField[]).map(renderField)}
           
           <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
             <Button
