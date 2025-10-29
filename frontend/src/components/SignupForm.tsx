@@ -49,7 +49,7 @@ const SignupForm: React.FC = () => {
     (formConfig.data as FormField[]).forEach((field: FormField) => {
       let validator: any = yup.string();
       
-      if (field.fieldType === 'EMAIL') {
+      if (field.fieldType === 'EMAIL' || (field.fieldType === 'TEXT' && field.name.toLowerCase().includes('email'))) {
         validator = validator.email('Please enter a valid email address');
       }
       
@@ -146,7 +146,7 @@ const SignupForm: React.FC = () => {
                 {...controllerField}
                 fullWidth
                 label={field.name}
-                type={field.fieldType === 'EMAIL' ? 'email' : 'text'}
+                type={field.fieldType === 'EMAIL' || field.name.toLowerCase().includes('email') ? 'email' : 'text'}
                 error={!!errors[fieldName]}
                 helperText={errors[fieldName]?.message as string}
                 required={field.required}
@@ -300,7 +300,10 @@ const SignupForm: React.FC = () => {
     <Box sx={{ maxWidth: 600, mx: 'auto', p: 3 }}>
       <Paper elevation={3} sx={{ p: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom align="center">
-          User Registration
+          Dynamic Signup Form
+        </Typography>
+        <Typography variant="body1" align="center" color="text.secondary" gutterBottom>
+          Form with 3 main fields: Full Name, Email, Gender + Additional Dynamic Fields
         </Typography>
         
         {submitSuccess && (
