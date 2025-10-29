@@ -18,18 +18,7 @@ export default function HomePage() {
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       {/* Header Section */}
-      <Box sx={{ textAlign: 'center', mb: 6 }}>
-        <Typography variant="h3" component="h1" gutterBottom>
-          Revest Solutions
-        </Typography>
-        <Typography variant="h5" component="h2" gutterBottom color="text.secondary">
-          Dynamic Component Builder Application
-        </Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ mt: 2, maxWidth: 800, mx: 'auto' }}>
-          Create a responsive application using Next.js and TypeScript that allows users to create and add their custom
-          components with dynamic form fields based on JSON configuration.
-        </Typography>
-      </Box>
+  
 
       {/* Quick Access to Microservices */}
       <Paper sx={{ p: 3, mb: 6, textAlign: 'center' }}>
