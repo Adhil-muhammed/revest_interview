@@ -140,6 +140,24 @@ export class OrderService {
     }
   }
 
+  async findByCustomerEmail(customerEmail: string): Promise<Order[]> {
+    return this.orderRepository.findByCustomerEmail(customerEmail);
+  }
+
+  async findByStatus(status: string): Promise<Order[]> {
+    return this.orderRepository.findByStatus(status as any);
+  }
+
+  async updateStatus(id: string, status: string): Promise<Order> {
+    const updatedOrder = await this.orderRepository.updateOrderStatus(id, status as any);
+    
+    if (!updatedOrder) {
+      throw new NotFoundException(`Order with ID ${id} not found`);
+    }
+    
+    return updatedOrder;
+  }
+
   async getOrdersSummary(): Promise<any> {
     const orders = await this.orderRepository.findAll();
     const totalOrders = orders.length;

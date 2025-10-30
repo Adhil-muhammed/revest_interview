@@ -1,0 +1,1 @@
+"select itemName sum(quantity) as totalQuantity from orderline groupBy itemName orderBy totalQuantity DESC"

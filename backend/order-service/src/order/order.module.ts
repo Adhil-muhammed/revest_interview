@@ -3,6 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { join } from 'path';
 import { OrderController } from './order.controller';
+import { OrderGrpcController } from './order-grpc.controller';
 import { OrderService } from './order.service';
 import { OrderRepository } from './order.repository';
 import { Order, OrderSchema } from './schemas/order.schema';
@@ -22,7 +23,7 @@ import { Order, OrderSchema } from './schemas/order.schema';
       },
     ]),
   ],
-  controllers: [OrderController],
+  controllers: [OrderController, OrderGrpcController],
   providers: [OrderService, OrderRepository],
   exports: [OrderService],
 })
